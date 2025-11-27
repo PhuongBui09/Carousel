@@ -129,7 +129,8 @@ function lazyLoadImages() {
       });
     });
 
-    aImg.forEach((img) => imageObserver.observe(img));
+    // ensure we iterate an Array (HTMLCollection may not have forEach)
+    Array.from(aImg).forEach((img) => imageObserver.observe(img));
   }
 }
 
