@@ -25,7 +25,7 @@ var tX = 0;
 var tY = 10;
 
 var selectedIndex = null; // index of the image currently zoomed
-var dimOpacity = 0.1;
+var dimOpacity = 0.01;
 
 // Audio Control: try autoplay, else start on first user gesture (tap/click)
 var bgMusic = document.getElementById("bg-music");
@@ -213,8 +213,7 @@ aEle.forEach((element, idx) => {
     // Thêm class active và override transform inline để căn giữa (CSS .active sẽ set position fixed)
     this.classList.add("active");
     // Đặt inline transform giống CSS để chắc chắn override transform cũ
-    // (CSS .active sets top/left; ensure transform centers the fixed item)
-    this.style.transform = "translate(-50%, -50%)";
+    this.style.transform = "translate(-50%, -50%) scale(1.2)"; // Thay đổi để phóng to
     this.style.transition = "transform 0.4s";
 
     // Dim / disable other elements while zoomed
