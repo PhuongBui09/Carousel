@@ -7,10 +7,22 @@
     <link rel="stylesheet" href="./style.css" />
   </head>
   <body>
+    <!-- Loading Spinner -->
+    <div id="loading-spinner" class="loading-spinner">
+      <div class="spinner"></div>
+      <p>Loading...</p>
+    </div>
+
     <!-- Audio nền -->
     <audio id="bg-music" loop playsinline preload="auto">
       <source src="./assets/Audio1.mp3" type="audio/mpeg" />
     </audio>
+
+    <!-- Info Overlay -->
+    <div id="info-overlay" class="info-overlay">
+      <h3 id="info-title">Lynnie</h3>
+      <p id="info-description">🌻 Beautiful moments</p>
+    </div>
 
     <div id="drag-container">
       <div id="spin-container">
@@ -18,72 +30,102 @@
         <img
           src="./assets/Anh1.jpg"
           data-src="./assets/Anh1.jpg"
+          data-title="Memory 01"
+          data-description="✨ First moment"
           alt="Anh1"
           loading="lazy"
         />
         <img
           src="./assets/Anh2.jpg"
           data-src="./assets/Anh2.jpg"
+          data-title="Memory 02"
+          data-description="💛 Happy days"
           alt="Anh2"
           loading="lazy"
         />
         <img
           src="./assets/Anh3.jpg"
           data-src="./assets/Anh3.jpg"
+          data-title="Memory 03"
+          data-description="🌈 Colorful life"
           alt="Anh3"
           loading="lazy"
         />
         <img
           src="./assets/Anh4.jpg"
           data-src="./assets/Anh4.jpg"
+          data-title="Memory 04"
+          data-description="🎀 Sweet time"
           alt="Anh4"
           loading="lazy"
         />
         <img
           src="./assets/Anh5.jpg"
           data-src="./assets/Anh5.jpg"
+          data-title="Memory 05"
+          data-description="🌸 Nature's beauty"
           alt="Anh5"
           loading="lazy"
         />
         <img
           src="./assets/Anh6.jpg"
           data-src="./assets/Anh6.jpg"
+          data-title="Memory 06"
+          data-description="☀️ Sunny vibes"
           alt="Anh6"
           loading="lazy"
         />
         <img
           src="./assets/Anh7.jpg"
           data-src="./assets/Anh7.jpg"
+          data-title="Memory 07"
+          data-description="🌙 Dreamy night"
           alt="Anh7"
           loading="lazy"
         />
         <img
           src="./assets/Anh8.jpg"
           data-src="./assets/Anh8.jpg"
+          data-title="Memory 08"
+          data-description="💎 Precious moment"
           alt="Anh8"
           loading="lazy"
         />
         <img
           src="./assets/Anh9.jpg"
           data-src="./assets/Anh9.jpg"
+          data-title="Memory 09"
+          data-description="🎵 Music & love"
           alt="Anh9"
           loading="lazy"
         />
         <img
           src="./assets/Anh10.jpg"
           data-src="./assets/Anh10.jpg"
+          data-title="Memory 10"
+          data-description="✨ Sparkle bright"
           alt="Anh10"
           loading="lazy"
         />
         <img
           src="./assets/Anh11.jpg"
           data-src="./assets/Anh11.jpg"
+          data-title="Memory 11"
+          data-description="🌺 Forever special"
           alt="Anh11"
           loading="lazy"
         />
 
         <!-- Add video -->
-        <video controls autoplay loop muted playsinline>
+        <video
+          controls
+          autoplay
+          loop
+          muted
+          playsinline
+          data-title="Video"
+          data-description="🎬 Special moments"
+        >
           <source src="./assets/Video1.mp4" type="video/mp4" />
         </video>
 

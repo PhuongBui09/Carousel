@@ -11,6 +11,11 @@ class Carousel {
     this.tY = 10;
     this.selectedIndex = null;
     this.audioStarted = false;
+    this.loadedImages = new Set();
+    this.preloadQueue = [];
+    this.isReducedMotion = window.matchMedia(
+      "(prefers-reduced-motion: reduce)"
+    ).matches;
 
     this.init();
   }
@@ -21,7 +26,9 @@ class Carousel {
     this.setupAudio();
     this.setupEventListeners();
     this.setupCarousel();
-    this.lazyLoadImages();
+    this.initProgressiveLoading();
+    this.schedulePreload();
+    this.hideLoadingSpinner();
   }
 
   setupElements() {
@@ -32,6 +39,10 @@ class Carousel {
     this.aEle = [...this.aImg, ...this.aVid];
     this.ground = document.getElementById("ground");
     this.bgMusic = document.getElementById("bg-music");
+    this.loadingSpinner = document.getElementById("loading-spinner");
+    this.infoOverlay = document.getElementById("info-overlay");
+    this.infoTitle = document.getElementById("info-title");
+    this.infoDescription = document.getElementById("info-description");
   }
 
   setupStyles() {
@@ -42,10 +53,14 @@ class Carousel {
 
     // Responsive adjustments
     if (window.innerWidth < 768) {
-      // Mobile breakpoint
-      this.ospin.style.width = this.imgWidth * 0.8 + "px"; // Reduce width
-      this.ospin.style.height = this.imgHeight * 0.8 + "px"; // Reduce height
-      this.radius *= 0.8; // Adjust radius for mobile
+      this.ospin.style.width = this.imgWidth * 0.8 + "px";
+      this.ospin.style.height = this.imgHeight * 0.8 + "px";
+      this.radius *= 0.8;
+    }
+
+    // Reduce animations for users with motion sensitivity
+    if (this.isReducedMotion) {
+      this.ospin.style.animation = "none";
     }
   }
 
@@ -68,13 +83,14 @@ class Carousel {
       element.addEventListener("click", (e) =>
         this.handleElementClick(e, element, idx)
       );
+      element.addEventListener("mouseenter", () => this.updateInfoOverlay(idx));
+      element.addEventListener("mouseleave", () => this.hideInfoOverlay());
     });
 
     document.addEventListener("click", () => this.closeZoom(true));
     document.onpointerdown = (e) => this.handlePointerDown(e);
     document.onwheel = (e) => this.handleWheel(e);
 
-    // Touch event listeners
     document.addEventListener("touchstart", (e) => this.handleTouchStart(e));
     document.addEventListener("touchmove", (e) => this.handleTouchMove(e));
   }
@@ -90,11 +106,24 @@ class Carousel {
     const deltaX = touch.clientX - this.startX;
     const deltaY = touch.clientY - this.startY;
 
-    // Implement swipe logic
     if (Math.abs(deltaX) > Math.abs(deltaY)) {
-      this.tX += deltaX * 0.1; // Adjust rotation based on swipe
+      this.tX += deltaX * 0.1;
       this.applyTransform();
     }
+  }
+
+  updateInfoOverlay(idx) {
+    const element = this.aEle[idx];
+    const title = element.dataset.title || "Lynnie";
+    const description = element.dataset.description || "🌻 Beautiful moments";
+
+    this.infoTitle.textContent = title;
+    this.infoDescription.textContent = description;
+    this.infoOverlay.classList.add("show");
+  }
+
+  hideInfoOverlay() {
+    this.infoOverlay.classList.remove("show");
   }
 
   handleElementClick(e, element, idx) {
@@ -111,7 +140,7 @@ class Carousel {
     element.dataset.origTransform = element.style.transform || "";
     element.classList.add("active");
     element.style.transform = "translate(-50%, -50%) scale(1.2)";
-    element.style.transition = "transform 0.4s";
+    element.style.transition = this.isReducedMotion ? "none" : "transform 0.4s";
 
     this.aEle.forEach((el) => {
       if (el !== element) {
@@ -122,16 +151,21 @@ class Carousel {
 
     this.playSpin(false);
     this.odrag.style.pointerEvents = "none";
+    this.hideInfoOverlay();
   }
 
   closeZoom(recenter) {
+    const transitionStyle = this.isReducedMotion
+      ? "none"
+      : "transform 0.8s, opacity 0.4s";
+
     this.aEle.forEach((el) => {
       el.classList.remove("active");
       if (el.dataset.origTransform !== undefined) {
         el.style.transform = el.dataset.origTransform;
         delete el.dataset.origTransform;
       }
-      el.style.transition = "transform 0.8s, opacity 0.4s";
+      el.style.transition = transitionStyle;
       el.style.opacity = "";
       el.style.pointerEvents = "";
     });
@@ -151,8 +185,13 @@ class Carousel {
     const step = 360 / len;
     for (let i = 0; i < len; i++) {
       const angle = (i - centerIndex) * step;
-      this.aEle[i].style.transition = "transform 0.8s, opacity 0.4s";
-      this.aEle[i].style.transitionDelay = delayTime || (len - i) / 8 + "s";
+      const transitionStyle = this.isReducedMotion
+        ? "none"
+        : "transform 0.8s, opacity 0.4s";
+      this.aEle[i].style.transition = transitionStyle;
+      this.aEle[i].style.transitionDelay = this.isReducedMotion
+        ? "0s"
+        : delayTime || (len - i) / 8 + "s";
       this.aEle[
         i
       ].style.transform = `rotateY(${angle}deg) translateZ(${this.radius}px)`;
@@ -163,12 +202,14 @@ class Carousel {
 
   arrangeCarouselInit(delayTime) {
     for (let i = 0; i < this.aEle.length; i++) {
+      const transitionStyle = this.isReducedMotion ? "none" : "transform 1s";
       this.aEle[i].style.transform = `rotateY(${
         i * (360 / this.aEle.length)
       }deg) translateZ(${this.radius}px)`;
-      this.aEle[i].style.transition = "transform 1s";
-      this.aEle[i].style.transitionDelay =
-        delayTime || (this.aEle.length - i) / 4 + "s";
+      this.aEle[i].style.transition = transitionStyle;
+      this.aEle[i].style.transitionDelay = this.isReducedMotion
+        ? "0s"
+        : delayTime || (this.aEle.length - i) / 4 + "s";
       this.aEle[i].style.opacity = "";
       this.aEle[i].style.pointerEvents = "";
     }
@@ -183,6 +224,7 @@ class Carousel {
   }
 
   playSpin(yes) {
+    if (this.isReducedMotion) return;
     this.ospin.style.animationPlayState = yes ? "running" : "paused";
   }
 
@@ -236,7 +278,7 @@ class Carousel {
   }
 
   setupCarousel() {
-    if (this.autoRotate) {
+    if (this.autoRotate && !this.isReducedMotion) {
       const animationName = this.rotateSpeed > 0 ? "spin" : "spinRevert";
       this.ospin.style.animation = `${animationName} ${Math.abs(
         this.rotateSpeed
@@ -246,23 +288,81 @@ class Carousel {
     setTimeout(() => this.arrangeCarouselInit(), 1000);
   }
 
-  lazyLoadImages() {
+  // Progressive Image Loading - Tải ảnh chất lượng cao dần
+  initProgressiveLoading() {
     if ("IntersectionObserver" in window) {
-      const imageObserver = new IntersectionObserver((entries) => {
-        entries.forEach((entry) => {
-          if (entry.isIntersecting) {
-            const img = entry.target;
-            if (img.dataset.src) {
-              img.src = img.dataset.src;
-              img.removeAttribute("data-src");
+      const imageObserver = new IntersectionObserver(
+        (entries) => {
+          entries.forEach((entry) => {
+            if (entry.isIntersecting) {
+              const img = entry.target;
+              this.loadImageProgressive(img);
+              imageObserver.unobserve(img);
             }
-            imageObserver.unobserve(img);
-          }
-        });
-      });
+          });
+        },
+        { rootMargin: "50px" }
+      );
 
       Array.from(this.aImg).forEach((img) => imageObserver.observe(img));
+    } else {
+      // Fallback cho trình duyệt cũ
+      Array.from(this.aImg).forEach((img) => this.loadImageProgressive(img));
     }
+  }
+
+  loadImageProgressive(img) {
+    if (this.loadedImages.has(img)) return;
+
+    const highResSrc = img.dataset.src;
+    if (!highResSrc) return;
+
+    const tempImg = new Image();
+    tempImg.onload = () => {
+      img.src = highResSrc;
+      img.removeAttribute("data-src");
+      this.loadedImages.add(img);
+    };
+    tempImg.onerror = () => {
+      console.error(`Failed to load: ${highResSrc}`);
+    };
+    tempImg.src = highResSrc;
+  }
+
+  // Preload Optimization - Tải trước ảnh gần
+  schedulePreload() {
+    if (this.aEle.length <= 1) return;
+
+    // Tải trước 2 ảnh tiếp theo
+    setInterval(() => {
+      this.preloadNearbyImages();
+    }, 3000);
+  }
+
+  preloadNearbyImages() {
+    let currentIndex = 0;
+    // Tính toán ảnh gần nhất theo vị trí xoay
+    for (let i = 0; i < Math.min(2, this.aEle.length); i++) {
+      const nextIndex = (currentIndex + i + 1) % this.aEle.length;
+      const element = this.aEle[nextIndex];
+
+      if (
+        element.tagName === "IMG" &&
+        element.dataset.src &&
+        !this.loadedImages.has(element)
+      ) {
+        this.loadImageProgressive(element);
+      }
+    }
+  }
+
+  // Hide loading spinner
+  hideLoadingSpinner() {
+    setTimeout(() => {
+      if (this.loadingSpinner) {
+        this.loadingSpinner.classList.add("hidden");
+      }
+    }, 2000);
   }
 }
 
