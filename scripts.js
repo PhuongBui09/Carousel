@@ -69,13 +69,11 @@ class Carousel {
       if (this.audioStarted) return;
       this.audioStarted = true;
       this.bgMusic.play().catch(() => {
-        console.warn("Autoplay blocked, retry on user click.");
+        console.warn("Autoplay blocked");
       });
     };
 
-    window.addEventListener("pointerdown", startAudio, { once: true });
-    window.addEventListener("touchstart", startAudio, { once: true });
-    window.addEventListener("click", startAudio, { once: true });
+    document.addEventListener("click", startAudio, { once: true });
   }
 
   setupEventListeners() {
